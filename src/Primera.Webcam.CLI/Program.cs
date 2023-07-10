@@ -2,6 +2,8 @@
 
 using CameraCapture.WPF.VideoCapture;
 
+using Newtonsoft.Json;
+
 using Optional;
 
 using Primera.Webcam.Device;
@@ -10,15 +12,34 @@ namespace Primera.Webcam.CLI
 {
     internal class Program
     {
+        public static string? OutputFile { get; set; }
+
+        /// <summary>
+        /// Write to this output text prior to exiting command for final output text.
+        /// </summary>
+        public static string OutputText { get; set; }
+
+        public static bool UseJson { get; set; }
+
         [MTAThread]
         public static int Main(string[] args)
         {
             RootCommand rootCommand = new RootCommand("An application to communciate with Video Capture Devices");
 
-            var outputFileOption = new System.CommandLine.Option<bool>("--json", "Structure output data in .json format.")
+            var jsonOption = new System.CommandLine.Option<bool>("--json", "Structure output data in .json format.")
             {
-                Arity = ArgumentArity.Zero
+                Arity = ArgumentArity.Zero,
+                IsRequired = false
             };
+
+            var outputFileOption = new System.CommandLine.Option<string>("--outputFile", "Output data to the specified file.")
+            {
+                IsRequired = false,
+                Arity = ArgumentArity.ExactlyOne
+            };
+
+            rootCommand.AddGlobalOption(jsonOption);
+            rootCommand.AddGlobalOption(outputFileOption);
 
             /*
              * List Video Capture Devices
@@ -32,7 +53,7 @@ namespace Primera.Webcam.CLI
                 "No parsing is performed on the symbolic name to ensure maximum compatibility." +
                 Environment.NewLine + Environment.NewLine +
                 "After receiving the device name, continue to acquire available media sources through the \"mediaTypes\" command before attempting to capture an image.");
-            listDevicesCommand.SetHandler(ListCaptureDevices);
+            listDevicesCommand.SetHandler(ListCaptureDevices, jsonOption, outputFileOption);
 
             rootCommand.AddCommand(listDevicesCommand);
 
@@ -41,7 +62,8 @@ namespace Primera.Webcam.CLI
              */
             var deviceNameOption = new System.CommandLine.Option<string>("--deviceName", description: "The friendly name given from a capture device. Acquired from the \"devices\" command.")
             {
-                IsRequired = true
+                IsRequired = true,
+                Arity = ArgumentArity.ExactlyOne
             };
 
             var listMediaTypesCommand = new Command("mediaTypes",
@@ -52,10 +74,10 @@ namespace Primera.Webcam.CLI
                 Environment.NewLine + Environment.NewLine +
                 "After identifying the appropriate media source for some device, capture an image using the \"capture\" command.")
             {
-                deviceNameOption
+                deviceNameOption,
             };
 
-            listMediaTypesCommand.SetHandler(ListMediaTypes, deviceNameOption);
+            listMediaTypesCommand.SetHandler(ListMediaTypes, deviceNameOption, jsonOption, outputFileOption);
 
             rootCommand.AddCommand(listMediaTypesCommand);
 
@@ -66,7 +88,11 @@ namespace Primera.Webcam.CLI
             var filepathOption = new System.CommandLine.Option<string>("--filepath",
                 description: "A save location for the captured sample. " +
                 "This filepath must point to a file location within an already existing directory."
-            );
+            )
+            {
+                Arity = ArgumentArity.ExactlyOne,
+                IsRequired = true
+            };
             var captureCommand = new Command("capture", "Capture a still image from a given capture device and media type")
             {
                 deviceNameOption,
@@ -77,6 +103,14 @@ namespace Primera.Webcam.CLI
             rootCommand.AddCommand(captureCommand);
 
             var result = rootCommand.Invoke(args);
+
+            using var outputStream = OutputFile switch
+            {
+                null => Console.Out,
+                string value => new StreamWriter(File.OpenWrite(value))
+            };
+
+            outputStream.Write(OutputText);
             return result;
         }
 
@@ -143,26 +177,51 @@ namespace Primera.Webcam.CLI
                 .Map<IReadOnlyList<MediaTypeDTO>>(mediaTypes => mediaTypes.Select(MediaTypeDTO.Create).ToList());
         }
 
-        private static void ListCaptureDevices()
+        private static void HandleGlobalOptions(bool useJson, string outputFilepath)
         {
+            UseJson = useJson;
+            OutputFile = outputFilepath;
+        }
+
+        private static void ListCaptureDevices(bool useJson, string outputFilePath)
+        {
+            HandleGlobalOptions(useJson, outputFilePath);
+
             var devices = GetCaptureDeviceDTOs();
-            foreach (var d in devices)
+            if (!UseJson)
             {
-                Console.WriteLine($"{d.FriendlyName} : {d.SymbolicName}");
+                foreach (var d in devices)
+                {
+                    OutputText += $"{d.FriendlyName} : {d.SymbolicName}{Environment.NewLine}";
+                }
+            }
+            else
+            {
+                OutputText = JsonConvert.SerializeObject(devices, Formatting.Indented);
             }
         }
 
-        private static void ListMediaTypes(string deviceName)
+        private static void ListMediaTypes(string deviceName, bool useJson, string outputFilePath)
         {
+            HandleGlobalOptions(useJson, outputFilePath);
+
             var device = SelectVidcapDevice(deviceName);
             if (device is null) return;
 
             var maybeMediaTypes = GetMediaTypeDTOs(device);
+
             maybeMediaTypes.MatchSome(mediaTypes =>
             {
-                foreach (var m in mediaTypes)
+                if (!UseJson)
                 {
-                    Console.WriteLine(m.ID);
+                    foreach (var m in mediaTypes)
+                    {
+                        OutputText += m.ID + Environment.NewLine;
+                    }
+                }
+                else
+                {
+                    OutputText = JsonConvert.SerializeObject(mediaTypes, Formatting.Indented);
                 }
             });
         }

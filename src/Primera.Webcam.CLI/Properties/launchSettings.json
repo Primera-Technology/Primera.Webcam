@@ -2,11 +2,11 @@
   "profiles": {
     "devices": {
       "commandName": "Project",
-      "commandLineArgs": "devices"
+      "commandLineArgs": "devices --json"
     },
     "mediaTypes": {
       "commandName": "Project",
-      "commandLineArgs": "mediaTypes --deviceName \"USB Camera\""
+      "commandLineArgs": "mediaTypes --deviceName \"USB Camera\" --json --outputFile \"C:\\Users\\eberg\\Desktop\\test.json\""
     },
     "capture": {
       "commandName": "Project",
