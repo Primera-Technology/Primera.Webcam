@@ -1,0 +1,20 @@
+{
+  "profiles": {
+    "devices": {
+      "commandName": "Project",
+      "commandLineArgs": "devices"
+    },
+    "mediaTypes": {
+      "commandName": "Project",
+      "commandLineArgs": "mediaTypes --deviceName \"USB Camera\""
+    },
+    "capture": {
+      "commandName": "Project",
+      "commandLineArgs": "capture --deviceName \"USB Camera\" --mediaType \"YUY2:800x600\" --filepath \"C:\\Users\\eberg\\Pictures\\CaptureTest.png\""
+    },
+    "help": {
+      "commandName": "Project",
+      "commandLineArgs": "help"
+    }
+  }
+}
