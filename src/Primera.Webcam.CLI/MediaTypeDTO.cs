@@ -6,12 +6,13 @@ namespace Primera.Webcam.CLI
 {
     public record MediaTypeDTO
     {
-        public MediaTypeDTO(string fourCC, int pixelWidth, int pixelHeight)
+        public MediaTypeDTO(string fourCC, int pixelWidth, int pixelHeight, double frameRate)
         {
             FourCC = fourCC;
             PixelWidth = pixelWidth;
             PixelHeight = pixelHeight;
-            ID = $"{FourCC}:{PixelWidth}x{PixelHeight}";
+            FrameRate = frameRate;
+            ID = $"{FourCC}:{PixelWidth}x{PixelHeight}@{FrameRate}";
         }
 
         public string ID { get; }
@@ -22,12 +23,14 @@ namespace Primera.Webcam.CLI
 
         public int PixelHeight { get; }
 
+        public double FrameRate { get; }
+
         internal static MediaTypeDTO Create(MediaTypeWrapper m)
         {
             var fourcc = new FourCC(m.VideoSubtype);
             int width = m.FrameSize.Width;
             int height = m.FrameSize.Height;
-            return new MediaTypeDTO(fourcc.ToString(), width, height);
+            return new MediaTypeDTO(fourcc.ToString(), width, height, m.FrameRate);
         }
     }
 }

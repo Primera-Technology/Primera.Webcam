@@ -4,6 +4,9 @@ using System.Drawing.Imaging;
 
 using CameraCapture.WPF.VideoCapture;
 
+using Emgu.CV.CvEnum;
+using Emgu.CV;
+
 using MediaFoundation;
 using MediaFoundation.Misc;
 
@@ -91,14 +94,14 @@ namespace Primera.Webcam.Device
         /// </summary>
         /// <param name="destinationLocation">A pointer to the first scanline of the destination buffer</param>
         /// <param name="destinationStride">The stride of the destination data</param>
-        /// <param name="destinationWidth">The total width of a row of destination data</param>
-        /// <param name="destinationHeight">The total height of a column of destination data.</param>
+        /// <param name="pixelWidth">The total width of a row of destination data</param>
+        /// <param name="pixelHeight">The total height of a column of destination data.</param>
         /// <returns>True if the buffer was copied successfully, false otherwise.</returns>
         public bool CopySampleBufferMemory(
             IntPtr destinationLocation,
             int destinationStride,
-            int destinationWidth,
-            int destinationHeight)
+            int pixelWidth,
+            int pixelHeight)
         {
             Trace.Verbose("Locking to copy frame sample");
             lock (SampleLock)
@@ -117,8 +120,14 @@ namespace Primera.Webcam.Device
                     frameBuffer2d = frameBuffer as IMF2DBuffer;
 
                     Trace.Verbose("Locking and acquiring frame sample buffer.");
-                    frameBuffer2d.Lock2D(out scanlineBuffer, out int lStride).CheckResult();
+                    frameBuffer2d.Lock2D(out scanlineBuffer, out int strideSource).CheckResult();
                     var convertImage = UnmanagedImageConvert.GetConversionFunction(MediaType.VideoSubtype);
+
+                    //var input = new Mat(pixelWidth, pixelHeight, DepthType.Cv8U, 2, scanlineBuffer, strideSource);
+                    //var output = new Mat();
+
+                    //// , memoryDestination, strideDestination);
+                    //Emgu.CV.CvInvoke.CvtColor(input, output, ColorConversion.Yuv2BgraYuy2);
 
                     //Back to the worker thread
                     unsafe
@@ -132,9 +141,9 @@ namespace Primera.Webcam.Device
                                     destinationLocation,
                                     destinationStride,
                                     scanlineBuffer,
-                                    lStride,
-                                    destinationWidth,
-                                    destinationHeight
+                                    strideSource,
+                                    pixelWidth,
+                                    pixelHeight
                                 );
                             }
                         }
