@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+      <AssemblyName>mfcapture</AssemblyName>
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -13,12 +14,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Costura.Fody" Version="5.7.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Resource.Embedder" Version="2.2.0" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Primera.Webcam\Primera.Webcam.csproj" />
   </ItemGroup>
-
+    
+    <!-- Create the release files to upload to GitHub-->
+    <Target Name="ZipOutputPath" AfterTargets="Build">
+        <ZipDirectory SourceDirectory="$(OutputPath)" DestinationFile="bin\$(Configuration)\$(Version).zip" />
+    </Target>
 </Project>

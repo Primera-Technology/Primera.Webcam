@@ -15,7 +15,7 @@ namespace CameraCapture.WPF.VideoCapture
 
         public static ITrace Trace { get; } = TracerST.Instance;
 
-        public static List<IMFActivate> EnumerateMfDevices(Guid filterCategory)
+        public static IList<IMFActivate> EnumerateMfDevices(Guid filterCategory)
         {
             string logDetail = $" [Category: {filterCategory}]";
             IMFAttributes attributes = null;
@@ -30,6 +30,12 @@ namespace CameraCapture.WPF.VideoCapture
 
                 Trace.Verbose("Enumerating device sources.");
                 MFExtern.MFEnumDeviceSources(attributes, out IMFActivate[] devices, out int numberDevices).CheckResult();
+
+                if (devices is null)
+                {
+                    Trace.Warning($"No devices returned from enumeration");
+                    return new List<IMFActivate>();
+                }
 
                 logDetail += $" [Count: {devices.Length}]";
                 Trace.Info("Devices enumerated." + logDetail);

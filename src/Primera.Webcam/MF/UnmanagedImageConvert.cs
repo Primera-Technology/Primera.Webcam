@@ -1,10 +1,10 @@
-﻿using MediaFoundation;
-
-using Primera.Image.RawFormats;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
+using MediaFoundation;
+
+using Primera.Image.RawFormats;
 
 namespace CameraCapture.WPF.VideoCapture
 {
@@ -54,7 +54,7 @@ namespace CameraCapture.WPF.VideoCapture
 
         public static VideoFormatGUID MatchFormat(Guid videoType)
         {
-            return VideoFormatDefs.FirstOrDefault(v => v.SubType == videoType);
+            return VideoFormatDefs.FirstOrDefault(v => v.SubType == videoType) ?? throw new ArgumentOutOfRangeException($"No conversion function found for video type {videoType}");
         }
 
         //-------------------------------------------------------------------

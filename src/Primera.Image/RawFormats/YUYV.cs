@@ -1,4 +1,4 @@
-﻿namespace CameraCapture.WPF.VideoCapture
+﻿namespace Primera.Image.RawFormats
 {
     /// <summary>
     /// A struct that describes a YUYV pixel
