@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+
+    <PropertyGroup>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Title>Primera.Image</Title>
+        <Company>Primera Technology, Inc.</Company>
+        <Authors>Erick Berg</Authors>
+        <Description>A simple library that contains important .</Description>
+        <Copyright>2023</Copyright>
+        <PackageProjectUrl>https://github.com/Primera-Technology/Primera.Webcam</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/Primera-Technology/Primera.Webcam</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>Primera</PackageTags>
+    </PropertyGroup>
+</Project>

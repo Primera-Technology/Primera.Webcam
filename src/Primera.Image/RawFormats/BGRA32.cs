@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Primera.Image.RawFormats
+namespace Primera.ImageTransform.RawFormats
 {
     /// <summary>
     /// 32-bit representation of RGB color with 8-bits each for R, G, B, and Alpha

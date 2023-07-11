@@ -4,13 +4,13 @@ namespace CameraCapture.WPF.VideoCapture
 {
     public record VideoFormatGUID
     {
-        public VideoFormatGUID(Guid FormatGuid, VideoConversionDelegate cvt)
+        public VideoFormatGUID(Guid FormatGuid, FrameConversionDelegate cvt)
         {
             SubType = FormatGuid;
             VideoConvertFunction = cvt;
         }
 
-        public VideoConversionDelegate VideoConvertFunction { get; }
+        public FrameConversionDelegate VideoConvertFunction { get; }
         public Guid SubType { get; }
     }
 }

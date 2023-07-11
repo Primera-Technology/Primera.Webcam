@@ -1,17 +1,33 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0-windows;net472</TargetFrameworks>
+    <TargetFrameworks>net472</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-      <UseWPF>true</UseWPF>
-      <LangVersion>latest</LangVersion>
+    <UseWPF>true</UseWPF>
+    <LangVersion>latest</LangVersion>
+      
   </PropertyGroup>
+
+    <PropertyGroup>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Title>Primera.Webcam</Title>
+        <Company>Primera Technology, Inc.</Company>
+        <Authors>Erick Berg</Authors>
+        <Description>A simple library for interacting with UVC compliant cameras through Media Foundation.</Description>
+        <Copyright>2023</Copyright>
+        <PackageProjectUrl>https://github.com/Primera-Technology/Primera.Webcam</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/Primera-Technology/Primera.Webcam</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>Primera</PackageTags>
+    </PropertyGroup>
 
     <ItemGroup>
     <Folder Include="Capture\" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Emgu.CV" Version="4.7.0.5276" />
+    <PackageReference Include="Emgu.CV.runtime.windows" Version="4.7.0.5276" />
     <PackageReference Include="MediaFoundation" Version="3.1.0" />
     <PackageReference Include="Optional" Version="4.0.0" />
     <PackageReference Include="Primera.Common.Logging" Version="5.1.3" />
@@ -19,7 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Primera.Image\Primera.Image.csproj" />
+    <ProjectReference Include="..\Primera.Image\Primera.ImageTransform.csproj" />
   </ItemGroup>
 
 </Project>

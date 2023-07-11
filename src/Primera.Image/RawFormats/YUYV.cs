@@ -1,4 +1,4 @@
-﻿namespace Primera.Image.RawFormats
+﻿namespace Primera.ImageTransform.RawFormats
 {
     /// <summary>
     /// A struct that describes a YUYV pixel

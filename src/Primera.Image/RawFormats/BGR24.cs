@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Primera.Image.RawFormats
+namespace Primera.ImageTransform.RawFormats
 {
 
     /// <summary>

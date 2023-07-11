@@ -2,13 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using Emgu.CV.CvEnum;
+using Emgu.CV;
+
 using MediaFoundation;
 
-using Primera.Image.RawFormats;
+using Primera.ImageTransform.RawFormats;
 
 namespace CameraCapture.WPF.VideoCapture
 {
-    public delegate void VideoConversionDelegate(IntPtr pDest, int lDestStride, IntPtr pSrc, int lSrcStride, int dwWidthInPixels, int dwHeightInPixels);
+    public delegate void FrameConversionDelegate(IntPtr pDest, int lDestStride, IntPtr pSrc, int lSrcStride, int dwWidthInPixels, int dwHeightInPixels);
 
     public static class UnmanagedImageConvert
     {
@@ -35,7 +38,7 @@ namespace CameraCapture.WPF.VideoCapture
             return rgbq;
         }
 
-        public static VideoConversionDelegate GetConversionFunction(Guid videoType)
+        public static FrameConversionDelegate GetConversionFunction(Guid videoType)
         {
             return MatchFormat(videoType)?.VideoConvertFunction;
         }
@@ -181,28 +184,17 @@ namespace CameraCapture.WPF.VideoCapture
         public static unsafe void TransformImage_YUY2(
             IntPtr pDest,
             int lDestStride,
-            IntPtr pSrc,
-            int lSrcStride,
-            int dwWidthInPixels,
-            int dwHeightInPixels)
+            IntPtr scanlineBuffer,
+            int strideSource,
+            int pixelWidth,
+            int pixelHeight)
         {
-            YUYV* pSrcPel = (YUYV*)pSrc;
-            BGRA32* pDestPel = (BGRA32*)pDest;
+            var input = new Mat(pixelHeight, pixelWidth, DepthType.Cv8U, 2, scanlineBuffer, strideSource);
+            var output = new Mat(pixelHeight, pixelWidth, DepthType.Cv8U, 4, pDest, lDestStride);
 
-            lSrcStride /= 4; // convert lSrcStride to YUYV
-            lDestStride /= 4; // convert lDestStride to RGBQUAD
-
-            for (int y = 0; y < dwHeightInPixels; y++)
-            {
-                for (int x = 0; x < dwWidthInPixels / 2; x++)
-                {
-                    pDestPel[x * 2] = ConvertYCrCbToRGB(pSrcPel[x].Y, pSrcPel[x].V, pSrcPel[x].U);
-                    pDestPel[(x * 2) + 1] = ConvertYCrCbToRGB(pSrcPel[x].Y2, pSrcPel[x].V, pSrcPel[x].U);
-                }
-
-                pSrcPel += lSrcStride;
-                pDestPel += lDestStride;
-            }
+            // , memoryDestination, strideDestination);
+            Emgu.CV.CvInvoke.CvtColor(input, output, ColorConversion.Yuv2BgraYuy2);
+            return;
         }
 
         private static byte Clip(int clr)

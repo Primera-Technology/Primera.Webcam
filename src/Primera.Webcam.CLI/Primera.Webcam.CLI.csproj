@@ -29,6 +29,6 @@
     
     <!-- Create the release files to upload to GitHub-->
     <Target Name="ZipOutputPath" AfterTargets="Build">
-        <ZipDirectory SourceDirectory="$(OutputPath)" DestinationFile="bin\$(Configuration)\$(Version).zip" />
+        <ZipDirectory SourceDirectory="$(OutputPath)" DestinationFile="bin\$(Configuration)\$(Version).zip" Overwrite="true" />
     </Target>
 </Project>

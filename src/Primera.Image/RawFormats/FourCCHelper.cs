@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Text;
 
-namespace Primera.Image.RawFormats
+namespace Primera.ImageTransform.RawFormats
 {
     /// <summary>
     /// Four CC codes are used to identify media types, especially in Media Foundation.

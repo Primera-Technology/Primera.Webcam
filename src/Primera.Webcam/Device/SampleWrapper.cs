@@ -123,12 +123,6 @@ namespace Primera.Webcam.Device
                     frameBuffer2d.Lock2D(out scanlineBuffer, out int strideSource).CheckResult();
                     var convertImage = UnmanagedImageConvert.GetConversionFunction(MediaType.VideoSubtype);
 
-                    //var input = new Mat(pixelWidth, pixelHeight, DepthType.Cv8U, 2, scanlineBuffer, strideSource);
-                    //var output = new Mat();
-
-                    //// , memoryDestination, strideDestination);
-                    //Emgu.CV.CvInvoke.CvtColor(input, output, ColorConversion.Yuv2BgraYuy2);
-
                     //Back to the worker thread
                     unsafe
                     {

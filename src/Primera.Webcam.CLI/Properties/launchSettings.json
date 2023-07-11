@@ -10,7 +10,7 @@
     },
     "capture": {
       "commandName": "Project",
-      "commandLineArgs": "capture --deviceName \"USB Camera\" --mediaType \"YUY2:800x600\" --filepath \"C:\\Users\\eberg\\Pictures\\CaptureTest.png\""
+      "commandLineArgs": "capture --deviceName \"USB Camera\" --mediaType \"YUY2:800x600@20\" --filepath \"C:\\Users\\eberg\\Pictures\\CaptureTest.png\""
     },
     "help": {
       "commandName": "Project",

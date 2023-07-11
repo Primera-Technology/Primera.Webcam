@@ -5,9 +5,11 @@ VisualStudioVersion = 17.5.33424.131
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Primera.Webcam", "Primera.Webcam\Primera.Webcam.csproj", "{5B9B11AE-7BDD-482B-9DB7-B10C40181EAB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Primera.Image", "Primera.Image\Primera.Image.csproj", "{98FF690C-8759-4B33-902F-E15B56868438}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Primera.ImageTransform", "Primera.Image\Primera.ImageTransform.csproj", "{98FF690C-8759-4B33-902F-E15B56868438}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Primera.Webcam.CLI", "Primera.Webcam.CLI\Primera.Webcam.CLI.csproj", "{D90ADBC3-5BCB-49A6-A44B-748F728A4C26}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Primera.Webcam.UnitTests", "Primera.Webcam.UnitTests\Primera.Webcam.UnitTests.csproj", "{E88FE7DB-789B-474F-ABD4-D65641B3A02E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{D90ADBC3-5BCB-49A6-A44B-748F728A4C26}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D90ADBC3-5BCB-49A6-A44B-748F728A4C26}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D90ADBC3-5BCB-49A6-A44B-748F728A4C26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E88FE7DB-789B-474F-ABD4-D65641B3A02E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E88FE7DB-789B-474F-ABD4-D65641B3A02E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E88FE7DB-789B-474F-ABD4-D65641B3A02E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E88FE7DB-789B-474F-ABD4-D65641B3A02E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
