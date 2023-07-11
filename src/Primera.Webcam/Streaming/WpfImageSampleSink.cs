@@ -5,9 +5,6 @@ using System.Windows.Media.Imaging;
 
 using CameraCapture.WPF.VideoCapture;
 
-using MediaFoundation;
-using MediaFoundation.Misc;
-
 using Primera.Common.Logging;
 using Primera.Webcam.Device;
 
@@ -61,7 +58,6 @@ namespace Primera.Webcam.Streaming
         /// </summary>
         public void WriteSample(SampleWrapper sample)
         {
-            var pSample = sample.Instance;
             var mediaType = sample.MediaType;
             if (Application.Current?.Dispatcher is null)
             {
@@ -93,25 +89,11 @@ namespace Primera.Webcam.Streaming
             Trace.Verbose("Locking to render frame sample");
             lock (this)
             {
-                IMFMediaBuffer frameBuffer = null;
-                IMF2DBuffer frameBuffer2d = null;
                 try
                 {
-                    IntPtr scanlineBuffer = IntPtr.Zero;
-                    int lStride = 0;
-                    if (pSample != null)
+                    if (sample != null)
                     {
                         Trace.Verbose($"Found frame sample.");
-                        // Get the video frame buffer from the sample.
-                        pSample.GetBufferByIndex(0, out frameBuffer).CheckResult();
-                        // Helper object to lock the video buffer.
-                        // Lock the video buffer. This method returns a pointer to the first scan
-                        // line in the image, and the stride in bytes.
-                        frameBuffer2d = frameBuffer as IMF2DBuffer;
-
-                        Trace.Verbose("Locking and acquiring frame sample buffer.");
-                        frameBuffer2d.Lock2D(out scanlineBuffer, out lStride).CheckResult();
-                        var convertImage = UnmanagedImageConvert.GetConversionFunction(mediaType.VideoSubtype);
 
                         //Put this code in a method that is called from the background thread
                         IntPtr pBackBuffer = IntPtr.Zero;
@@ -131,29 +113,7 @@ namespace Primera.Webcam.Streaming
                             });
                         }
 
-                        //Back to the worker thread
-                        unsafe
-                        {
-                            Trace.Verbose("Converting image to BGRA.");
-                            try
-                            {
-                                unsafe
-                                {
-                                    convertImage(
-                                        pBackBuffer,
-                                        backBufferStride,
-                                        scanlineBuffer,
-                                        lStride,
-                                        width,
-                                        height
-                                    );
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                Trace.Error(ExceptionMessage.Handled(e, $"Encountered issue writing pixels to bitmap."));
-                            }
-                        }
+                        sample.CopySampleBufferMemory(pBackBuffer, backBufferStride, width, height);
 
                         lock (WriteLock)
                         {
@@ -165,8 +125,6 @@ namespace Primera.Webcam.Streaming
                                 BitmapTarget.Unlock();
                             });
                         }
-
-                        frameBuffer2d.Unlock2D();
                     }
 
                     Trace.Verbose($"Returning from sample read method.");
@@ -174,11 +132,6 @@ namespace Primera.Webcam.Streaming
                 catch (Exception e)
                 {
                     Trace.Error(ExceptionMessage.Handled(e, $"Failed to render bitmap to view."));
-                }
-                finally
-                {
-                    COMBase.SafeRelease(frameBuffer);
-                    COMBase.SafeRelease(frameBuffer2d);
                 }
             }
         }
