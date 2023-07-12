@@ -2,17 +2,13 @@
 
     <PropertyGroup>
         <AssemblyName>mfcapture</AssemblyName>
-        <OutputType>Exe</OutputType>
-        <TargetFramework>net6.0-windows</TargetFramework>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net472</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+        <Version>1.0.1.1</Version>
 
-        <Version>1.0.1</Version>
-
-        <!-- To publish just a single *.exe file -->
-        <PublishSingleFile>true</PublishSingleFile>
-        <!-- Since NET 5 specify this if you want to also pack all external *.dll to your file -->
-        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     </PropertyGroup>
 
     <ItemGroup>
