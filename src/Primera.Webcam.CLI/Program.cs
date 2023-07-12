@@ -13,7 +13,15 @@ using Primera.Webcam.Device;
 
 namespace Primera.Webcam.CLI
 {
-    internal class Program
+    public enum ExitCodes
+    {
+        None = 0,
+        UnexpectedError,
+        DeviceNotFound,
+        MediaTypeNotFound
+    }
+
+    public class Program
     {
         public static string? OutputFile { get; set; }
 
@@ -25,7 +33,7 @@ namespace Primera.Webcam.CLI
         public static bool UseJson { get; set; }
 
         [MTAThread]
-        public static int Main(string[] args)
+        public static void Main(string[] args)
         {
             ITrace trace = TracerST.Instance;
             var source = new TraceSource("mfcapture")
@@ -125,32 +133,53 @@ namespace Primera.Webcam.CLI
             };
 
             outputStream.Write(OutputText);
-            return result;
         }
 
         private static void CaptureImage(string deviceName, string mediaTypeId, string filepath)
         {
             var device = SelectVidcapDevice(deviceName);
-            if (device is null) return;
-
-            var maybeReader = GetDefaultSourceReader(device);
-            maybeReader.FlatMap(sourceReader =>
+            if (device is null)
             {
-                var maybeMedia = SelectMediaType(sourceReader, mediaTypeId);
+                SetExitCode(ExitCodes.DeviceNotFound);
+                return;
+            }
+
+            var maybeReader = GetDefaultSourceReader(device).WithException(ExitCodes.UnexpectedError);
+            var maybeSample = maybeReader.FlatMap(sourceReader =>
+            {
+                var maybeMedia = SelectMediaType(sourceReader, mediaTypeId).WithException(ExitCodes.MediaTypeNotFound);
                 return maybeMedia.FlatMap(mediaType =>
                 {
                     sourceReader.SetMediaType(mediaType);
-                    Console.Error.WriteLine("Reading Sample");
-                    sourceReader.ReadSample().MatchSome(sample => sample.Dispose());
-                    return sourceReader.ReadSample();
+
+                    // The initial frames might be poorly exposed. Skip a few frames to get a good exposure
+                    int skipFrameCount = 1;
+                    for (int i = 0; i < skipFrameCount; i++)
+                    {
+                        sourceReader.ReadSample().MatchSome(sample =>
+                        {
+                            Console.Error.WriteLine($"Sample {i} skipped");
+                            sample.Dispose();
+                        });
+                    }
+
+                    return sourceReader.ReadSample().WithException(ExitCodes.UnexpectedError);
                 });
-            }).MatchSome(sample =>
-            {
-                Console.Error.WriteLine("Saving Bitmap");
-                var bmp = sample.GetBitmap();
-                bmp.Save(filepath);
-                sample.Dispose();
             });
+
+            maybeSample.Match(
+                some: sample =>
+                {
+                    var bmp = sample.GetBitmap();
+                    Console.Error.WriteLine($"Bitmap saved to file: {filepath}");
+                    bmp.Save(filepath);
+                    sample.Dispose();
+                },
+                none: error =>
+                {
+                    Console.Error.WriteLine($"Could not read sample from capture device");
+                    SetExitCode(error);
+                });
         }
 
         private static IReadOnlyList<CaptureDeviceDTO> GetCaptureDeviceDTOs()
@@ -213,14 +242,26 @@ namespace Primera.Webcam.CLI
             {
                 OutputText = JsonConvert.SerializeObject(devices, Formatting.Indented);
             }
+
+            SetExitCode(ExitCodes.None);
         }
 
+        /// <summary>
+        /// Main-line command to list all of the media types for a given device / media source
+        /// </summary>
+        /// <param name="deviceName">The devicename to select</param>
+        /// <param name="useJson">Output media type information as structured json. If false, return elements separated by newlines</param>
+        /// <param name="outputFilePath">Output media type information to the file selected</param>
         private static void ListMediaTypes(string deviceName, bool useJson, string outputFilePath)
         {
             HandleGlobalOptions(useJson, outputFilePath);
 
             var device = SelectVidcapDevice(deviceName);
-            if (device is null) return;
+            if (device is null)
+            {
+                SetExitCode(ExitCodes.DeviceNotFound);
+                return;
+            }
 
             var maybeMediaTypes = GetMediaTypeDTOs(device);
 
@@ -238,6 +279,7 @@ namespace Primera.Webcam.CLI
                     OutputText = JsonConvert.SerializeObject(mediaTypes, Formatting.Indented);
                 }
             });
+            SetExitCode(ExitCodes.None);
         }
 
         private static Optional.Option<MediaTypeWrapper> SelectMediaType(SourceReaderWrapper device, string mediaTypeId)
@@ -248,6 +290,7 @@ namespace Primera.Webcam.CLI
                 var dto = MediaTypeDTO.Create(m);
                 if (Equals(dto.ID, mediaTypeId))
                 {
+                    Console.Error.WriteLine($"Found media type for ID: {mediaTypeId}");
                     return m.Some();
                 }
             }
@@ -265,12 +308,21 @@ namespace Primera.Webcam.CLI
                 return d.GetFriendlyName().Match(name => Equals(deviceFriendlyName, name), () => false);
             });
 
-            if (devices is null)
+            if (device is null)
             {
                 Console.Error.WriteLine($"Device was not found for friendly name: {deviceFriendlyName}. Get a list of all devices using the \"devices\" command.");
+                return null;
             }
+            else
+            {
+                Console.Error.WriteLine($"Device found for name: {deviceFriendlyName}");
+                return device;
+            }
+        }
 
-            return device;
+        private static void SetExitCode(ExitCodes code)
+        {
+            Environment.ExitCode = (int)code;
         }
     }
 }

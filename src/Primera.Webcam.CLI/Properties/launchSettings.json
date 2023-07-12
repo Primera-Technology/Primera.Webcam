@@ -6,11 +6,11 @@
     },
     "mediaTypes": {
       "commandName": "Project",
-      "commandLineArgs": "mediaTypes --deviceName \"USB Camera\" --json --outputFile \"C:\\Users\\eberg\\Desktop\\test.json\""
+      "commandLineArgs": "mediaTypes --deviceName \"Integrated Camera\" --json --outputFile \"C:\\ProgramData\\PTI\\tools\\mediaTypes.json\""
     },
     "capture": {
       "commandName": "Project",
-      "commandLineArgs": "capture --deviceName \"USB Camera\" --mediaType \"MJPG:1920x1080@30\" --filepath \"C:\\Users\\eberg\\Pictures\\CaptureTest.png\""
+      "commandLineArgs": "capture --deviceName \"Integrated Camera\" --mediaType \"YUY2:1280x720@30\" --filepath \"C:\\ProgramData\\PTI\\tools\\CaptureTest.png\""
     },
     "help": {
       "commandName": "Project",
