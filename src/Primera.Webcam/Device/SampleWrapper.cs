@@ -4,9 +4,6 @@ using System.Drawing.Imaging;
 
 using CameraCapture.WPF.VideoCapture;
 
-using Emgu.CV.CvEnum;
-using Emgu.CV;
-
 using MediaFoundation;
 using MediaFoundation.Misc;
 
@@ -57,6 +54,72 @@ namespace Primera.Webcam.Device
         /// </summary>
         private object SampleLock { get; } = new();
 
+        /// <summary>
+        /// Copy this samples frame buffer to a target memory location in BGRA32 format.
+        /// Holds a synchronizing lock for the duration of the copy operation for thread safety.
+        /// <para/>
+        /// Automatically detects the proper converter function to use when copying to the BGRA32 format.
+        /// </summary>
+        /// <param name="destinationLocation">A pointer to the first scanline of the destination buffer</param>
+        /// <param name="destinationStride">The stride of the destination data</param>
+        /// <param name="pixelWidth">The total width of a row of destination data</param>
+        /// <param name="pixelHeight">The total height of a column of destination data.</param>
+        /// <returns>True if the buffer was copied successfully, false otherwise.</returns>
+        public bool CopySampleBufferMemory(
+            IntPtr destinationLocation,
+            int pixelWidth,
+            int pixelHeight)
+        {
+            Trace.Verbose("Locking to copy frame sample");
+            lock (SampleLock)
+            {
+                IMFMediaBuffer frameBuffer = null;
+                IMF2DBuffer frameBuffer2d = null;
+                try
+                {
+
+                    IntPtr scanlineBuffer = IntPtr.Zero;
+                    Trace.Verbose($"Found frame sample.");
+                    // Get the video frame buffer from the sample.
+                    Instance.GetBufferByIndex(0, out frameBuffer).CheckResult();
+
+                    // Helper object to lock the video buffer.
+                    // Lock the video buffer. This method returns a pointer to the first scan
+                    // line in the image, and the stride in bytes.
+                    frameBuffer2d = frameBuffer as IMF2DBuffer;
+
+                    Trace.Verbose("Locking and acquiring frame sample buffer.");
+                    frameBuffer2d.Lock2D(out scanlineBuffer, out int strideSource).CheckResult();
+
+                    //Back to the worker thread
+                    Trace.Verbose("Converting image to BGRA.");
+                    try
+                    {
+                        UnmanagedImageConvert.ColorToBGRA(MediaType.VideoSubtype, destinationLocation, scanlineBuffer, pixelWidth, pixelHeight);
+                    }
+                    catch (Exception e)
+                    {
+                        Trace.Error(ExceptionMessage.Handled(e, $"Encountered issue writing pixels to bitmap."));
+                    }
+
+                    frameBuffer2d.Unlock2D();
+
+                    Trace.Verbose($"Returning from sample read method.");
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    Trace.Error(ExceptionMessage.Handled(e, $"Failed to render bitmap to view."));
+                    return false;
+                }
+                finally
+                {
+                    COMBase.SafeRelease(frameBuffer);
+                    COMBase.SafeRelease(frameBuffer2d);
+                }
+            }
+        }
+
         public void Dispose()
         {
             _isDisposed = true;
@@ -77,91 +140,12 @@ namespace Primera.Webcam.Device
             BitmapData data = bitmap.LockBits(new Rectangle(0, 0, size.Width, size.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppRgb);
             try
             {
-                CopySampleBufferMemory(data.Scan0, data.Stride, data.Width, data.Height);
+                CopySampleBufferMemory(data.Scan0, data.Width, data.Height);
                 return bitmap;
             }
             finally
             {
                 bitmap.UnlockBits(data);
-            }
-        }
-
-        /// <summary>
-        /// Copy this samples frame buffer to a target memory location in BGRA32 format.
-        /// Holds a synchronizing lock for the duration of the copy operation for thread safety.
-        /// <para/>
-        /// Automatically detects the proper converter function to use when copying to the BGRA32 format.
-        /// </summary>
-        /// <param name="destinationLocation">A pointer to the first scanline of the destination buffer</param>
-        /// <param name="destinationStride">The stride of the destination data</param>
-        /// <param name="pixelWidth">The total width of a row of destination data</param>
-        /// <param name="pixelHeight">The total height of a column of destination data.</param>
-        /// <returns>True if the buffer was copied successfully, false otherwise.</returns>
-        public bool CopySampleBufferMemory(
-            IntPtr destinationLocation,
-            int destinationStride,
-            int pixelWidth,
-            int pixelHeight)
-        {
-            Trace.Verbose("Locking to copy frame sample");
-            lock (SampleLock)
-            {
-                IMFMediaBuffer frameBuffer = null;
-                IMF2DBuffer frameBuffer2d = null;
-                try
-                {
-                    IntPtr scanlineBuffer = IntPtr.Zero;
-                    Trace.Verbose($"Found frame sample.");
-                    // Get the video frame buffer from the sample.
-                    Instance.GetBufferByIndex(0, out frameBuffer).CheckResult();
-                    // Helper object to lock the video buffer.
-                    // Lock the video buffer. This method returns a pointer to the first scan
-                    // line in the image, and the stride in bytes.
-                    frameBuffer2d = frameBuffer as IMF2DBuffer;
-
-                    Trace.Verbose("Locking and acquiring frame sample buffer.");
-                    frameBuffer2d.Lock2D(out scanlineBuffer, out int strideSource).CheckResult();
-                    var convertImage = UnmanagedImageConvert.GetConversionFunction(MediaType.VideoSubtype);
-
-                    //Back to the worker thread
-                    unsafe
-                    {
-                        Trace.Verbose("Converting image to BGRA.");
-                        try
-                        {
-                            unsafe
-                            {
-                                convertImage(
-                                    destinationLocation,
-                                    destinationStride,
-                                    scanlineBuffer,
-                                    strideSource,
-                                    pixelWidth,
-                                    pixelHeight
-                                );
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            Trace.Error(ExceptionMessage.Handled(e, $"Encountered issue writing pixels to bitmap."));
-                        }
-                    }
-
-                    frameBuffer2d.Unlock2D();
-
-                    Trace.Verbose($"Returning from sample read method.");
-                    return true;
-                }
-                catch (Exception e)
-                {
-                    Trace.Error(ExceptionMessage.Handled(e, $"Failed to render bitmap to view."));
-                    return false;
-                }
-                finally
-                {
-                    COMBase.SafeRelease(frameBuffer);
-                    COMBase.SafeRelease(frameBuffer2d);
-                }
             }
         }
     }

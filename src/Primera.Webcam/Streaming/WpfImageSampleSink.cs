@@ -106,14 +106,14 @@ namespace Primera.Webcam.Streaming
                             {//lock bitmap in ui thread
                                 Trace.Verbose("Locking writeable bitmap target.");
                                 BitmapTarget.Lock();
-                                pBackBuffer = BitmapTarget.BackBuffer;//Make pointer available to background thread
+                                pBackBuffer = BitmapTarget.BackBuffer;  //Make pointer available to background thread
                                 backBufferStride = BitmapTarget.BackBufferStride;
                                 width = BitmapTarget.PixelWidth;
                                 height = BitmapTarget.PixelHeight;
                             });
                         }
 
-                        sample.CopySampleBufferMemory(pBackBuffer, backBufferStride, width, height);
+                        sample.CopySampleBufferMemory(pBackBuffer, width, height);
 
                         lock (WriteLock)
                         {
