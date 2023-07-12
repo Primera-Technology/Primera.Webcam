@@ -1,4 +1,5 @@
 ﻿using System.CommandLine;
+using System.Diagnostics;
 
 using CameraCapture.WPF.VideoCapture;
 
@@ -6,6 +7,8 @@ using Newtonsoft.Json;
 
 using Optional;
 
+using Primera.Common.Logging;
+using Primera.FileSystem;
 using Primera.Webcam.Device;
 
 namespace Primera.Webcam.CLI
@@ -24,6 +27,17 @@ namespace Primera.Webcam.CLI
         [MTAThread]
         public static int Main(string[] args)
         {
+            ITrace trace = TracerST.Instance;
+            var source = new TraceSource("mfcapture")
+            {
+                Switch = new SourceSwitch("traceSwitch")
+                {
+                    Level = SourceLevels.Verbose
+                },
+            };
+            source.Listeners.Add(new ArchivableFileListener(PrimeraLocations.ProgramFolder("tools"), "mfcapture.log", true));
+            trace.AssociateSource(source);
+
             RootCommand rootCommand = new RootCommand("An application to communciate with Video Capture Devices");
 
             var jsonOption = new System.CommandLine.Option<bool>("--json", "Structure output data in .json format.")

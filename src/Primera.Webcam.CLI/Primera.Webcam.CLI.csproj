@@ -7,6 +7,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
 
+        <Version>1.0.1</Version>
+
         <!-- To publish just a single *.exe file -->
         <PublishSingleFile>true</PublishSingleFile>
         <!-- Since NET 5 specify this if you want to also pack all external *.dll to your file -->
@@ -19,6 +21,7 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="Primera.FileSystem" Version="1.0.5" />
         <PackageReference Include="Resource.Embedder" Version="2.2.0" />
         <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     </ItemGroup>
