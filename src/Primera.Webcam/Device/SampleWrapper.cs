@@ -7,6 +7,8 @@ using CameraCapture.WPF.VideoCapture;
 using MediaFoundation;
 using MediaFoundation.Misc;
 
+using Optional;
+
 using Primera.Common.Logging;
 
 namespace Primera.Webcam.Device
@@ -77,7 +79,6 @@ namespace Primera.Webcam.Device
                 IMF2DBuffer frameBuffer2d = null;
                 try
                 {
-
                     IntPtr scanlineBuffer = IntPtr.Zero;
                     Trace.Verbose($"Found frame sample.");
                     // Get the video frame buffer from the sample.
@@ -92,24 +93,21 @@ namespace Primera.Webcam.Device
                     frameBuffer2d.Lock2D(out scanlineBuffer, out int strideSource).CheckResult();
 
                     //Back to the worker thread
-                    Trace.Verbose("Converting image to BGRA.");
+                    Trace.Verbose("Converting sample to BGRA.");
+
                     try
                     {
                         UnmanagedImageConvert.ColorToBGRA(MediaType.VideoSubtype, destinationLocation, scanlineBuffer, pixelWidth, pixelHeight);
+                        return true;
                     }
-                    catch (Exception e)
+                    finally
                     {
-                        Trace.Error(ExceptionMessage.Handled(e, $"Encountered issue writing pixels to bitmap."));
+                        frameBuffer2d.Unlock2D();
                     }
-
-                    frameBuffer2d.Unlock2D();
-
-                    Trace.Verbose($"Returning from sample read method.");
-                    return true;
                 }
                 catch (Exception e)
                 {
-                    Trace.Error(ExceptionMessage.Handled(e, $"Failed to render bitmap to view."));
+                    Trace.Error(ExceptionMessage.Handled(e, $"Encountered issue writing sample to memory."));
                     return false;
                 }
                 finally
@@ -131,7 +129,7 @@ namespace Primera.Webcam.Device
         /// </summary>
         /// <returns>A bitmap copy of this buffer</returns>
         /// <exception cref="ObjectDisposedException"></exception>
-        public Bitmap GetBitmap()
+        public Option<Bitmap> GetBitmap()
         {
             if (_isDisposed) throw new ObjectDisposedException(nameof(SampleWrapper));
 
@@ -140,8 +138,14 @@ namespace Primera.Webcam.Device
             BitmapData data = bitmap.LockBits(new Rectangle(0, 0, size.Width, size.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppRgb);
             try
             {
-                CopySampleBufferMemory(data.Scan0, data.Width, data.Height);
-                return bitmap;
+                if (CopySampleBufferMemory(data.Scan0, data.Width, data.Height))
+                {
+                    return bitmap.Some();
+                }
+                else
+                {
+                    return bitmap.None();
+                }
             }
             finally
             {

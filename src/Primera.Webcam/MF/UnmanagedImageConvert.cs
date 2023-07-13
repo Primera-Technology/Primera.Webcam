@@ -15,7 +15,7 @@ namespace CameraCapture.WPF.VideoCapture
             var fourCC = new FourCC(videoType);
             if (fourCC.ToString() == "32")
             {
-                MediaFoundation.MFExtern.MFCopyImage(destinationMemory, pixelWidth * 4, sourceMemory, pixelWidth * 4, pixelWidth * 4, pixelHeight);
+                MFExtern.MFCopyImage(destinationMemory, pixelWidth * 4, sourceMemory, pixelWidth * 4, pixelWidth * 4, pixelHeight);
             }
             ColorConversion conversion = fourCC.ToString() switch
             {

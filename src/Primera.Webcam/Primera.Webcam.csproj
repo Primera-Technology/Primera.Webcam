@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net472</TargetFrameworks>
+        <TargetFrameworks>net6.0-windows</TargetFrameworks>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <UseWPF>true</UseWPF>
         <LangVersion>latest</LangVersion>
@@ -20,6 +20,7 @@
         <RepositoryUrl>https://github.com/Primera-Technology/Primera.Webcam</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>Primera</PackageTags>
+        <PlatformTarget>AnyCPU</PlatformTarget>
     </PropertyGroup>
 
     <ItemGroup>

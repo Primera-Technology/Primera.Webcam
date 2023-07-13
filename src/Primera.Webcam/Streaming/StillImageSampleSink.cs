@@ -1,4 +1,6 @@
-﻿using Primera.Webcam.Device;
+﻿using System.Drawing;
+
+using Primera.Webcam.Device;
 
 namespace Primera.Webcam.Streaming
 {
@@ -15,8 +17,11 @@ namespace Primera.Webcam.Streaming
             
             CaptureNextFrame = false;
 
-            var bitmap = sample.GetBitmap();
-            bitmap.Save(CapturePath);
+            var maybeBmp = sample.GetBitmap();
+            maybeBmp.MatchSome(bmp =>
+            {
+                bmp.Save(CapturePath);
+            });
         }
     }
 }

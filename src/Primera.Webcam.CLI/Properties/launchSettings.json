@@ -10,7 +10,7 @@
     },
     "capture": {
       "commandName": "Project",
-      "commandLineArgs": "capture --deviceName \"Integrated Camera\" --mediaType \"YUY2:1280x720@30\" --filepath \"C:\\ProgramData\\PTI\\tools\\CaptureTest.png\""
+      "commandLineArgs": "capture --deviceName \"USB Camera\" --mediaType \"YUY2:1280x960@8\" --filepath \"C:\\ProgramData\\PTI\\tools\\CaptureTest.png\""
     },
     "help": {
       "commandName": "Project",

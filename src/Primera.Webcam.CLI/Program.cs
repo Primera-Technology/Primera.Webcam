@@ -75,6 +75,7 @@ namespace Primera.Webcam.CLI
                 "No parsing is performed on the symbolic name to ensure maximum compatibility." +
                 Environment.NewLine + Environment.NewLine +
                 "After receiving the device name, continue to acquire available media sources through the \"mediaTypes\" command before attempting to capture an image.");
+
             listDevicesCommand.SetHandler(ListCaptureDevices, jsonOption, outputFileOption);
 
             rootCommand.AddCommand(listDevicesCommand);
@@ -150,6 +151,7 @@ namespace Primera.Webcam.CLI
                 var maybeMedia = SelectMediaType(sourceReader, mediaTypeId).WithException(ExitCodes.MediaTypeNotFound);
                 return maybeMedia.FlatMap(mediaType =>
                 {
+                    // Media type was found
                     sourceReader.SetMediaType(mediaType);
 
                     // The initial frames might be poorly exposed. Skip a few frames to get a good exposure
@@ -167,19 +169,43 @@ namespace Primera.Webcam.CLI
                 });
             });
 
-            maybeSample.Match(
+            var exitCode = maybeSample.Match<ExitCodes>(
                 some: sample =>
                 {
-                    var bmp = sample.GetBitmap();
-                    Console.Error.WriteLine($"Bitmap saved to file: {filepath}");
-                    bmp.Save(filepath);
+                    var maybeBmp = sample.GetBitmap();
                     sample.Dispose();
+                    return maybeBmp.Match(
+                        some: bmp =>
+                        {
+                            try
+                            {
+                                bmp.Save(filepath);
+                                Console.Error.WriteLine($"Bitmap saved to file: {filepath}");
+                                return ExitCodes.None;
+                            }
+                            catch (Exception e)
+                            {
+                                TracerST.Instance.Error(ExceptionMessage.Handled(e, $"Failed to write bitmap"));
+                                Console.Error.WriteLine($"Failed to write bitmap to file.");
+                                return ExitCodes.UnexpectedError;
+                            }
+                        },
+                        none: () =>
+                        {
+                            Console.Error.WriteLine($"Failed to read bitmap from sample.");
+                            return ExitCodes.UnexpectedError;
+                        }
+                    );
                 },
                 none: error =>
                 {
                     Console.Error.WriteLine($"Could not read sample from capture device");
-                    SetExitCode(error);
+                    return error;
                 });
+
+            SetExitCode(exitCode);
+
+            return;
         }
 
         private static IReadOnlyList<CaptureDeviceDTO> GetCaptureDeviceDTOs()
