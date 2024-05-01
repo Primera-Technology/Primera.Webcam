@@ -19,12 +19,16 @@ namespace Primera.Webcam.Device
 
         public IMFAttributes Instance { get; }
 
-        public ITrace Trace => CameraCaptureTracing.Trace;
+        public static ITrace Trace => CameraCaptureTracing.Trace;
 
         public static Option<SourceReaderOptionsWrapper> Create()
         {
             HResult result = MFExtern.MFCreateAttributes(out IMFAttributes sourceReaderOptions, 2);
-            if (COMBase.Failed(result)) return Option.None<SourceReaderOptionsWrapper>();
+            if (COMBase.Failed(result))
+            {
+                Trace.Warning("Failed to create Source reader options");
+                return Option.None<SourceReaderOptionsWrapper>();
+            }
 
             return new SourceReaderOptionsWrapper(sourceReaderOptions).Some();
         }

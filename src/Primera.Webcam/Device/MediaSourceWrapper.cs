@@ -31,7 +31,11 @@ namespace Primera.Webcam.Device
         public Option<SourceReaderWrapper> CreateSourceReader(SourceReaderOptionsWrapper options)
         {
             HResult result = MFExtern.MFCreateSourceReaderFromMediaSource(Instance, options.Instance, out IMFSourceReader sourceReader);
-            if (COMBase.Failed(result)) return Option.None<SourceReaderWrapper>();
+            if (COMBase.Failed(result))
+            {
+                CameraCaptureTracing.Trace.Warning($"Failed to create source reader from media source. {result}");
+                return Option.None<SourceReaderWrapper>();
+            }
 
             return new SourceReaderWrapper(sourceReader).Some();
         }

@@ -75,7 +75,7 @@ namespace Primera.Webcam.Device
 
             lock (this)
             {
-                Trace.Info($"Reading synchronous sample {NextFrameNumber}");
+                Trace.Verbose($"Reading synchronous sample {NextFrameNumber}");
                 HResult result = Instance.ReadSample(
                     (int)MF_SOURCE_READER.FirstVideoStream,
                     0,
@@ -84,7 +84,7 @@ namespace Primera.Webcam.Device
                     out long timestamp,
                     out IMFSample sample
                 );
-                Trace.Info($"Reading synchronous sample read. [HR: {result}]");
+                Trace.Verbose($"Reading synchronous sample read. [HR: {result}]");
 
                 if (COMBase.Failed(result))
                 {

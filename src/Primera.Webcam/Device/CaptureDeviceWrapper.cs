@@ -56,10 +56,12 @@ namespace Primera.Webcam.Device
 
             if (COMBase.Failed(result))
             {
+                Trace.Warning($"Failed to activate source capture device. {result}");
                 return Option.None<MediaSourceWrapper>();
             }
             else if (o is not IMFMediaSource mediaSource)
             {
+                Trace.Warning($"Failed to cast activated object to IMFMediaSource. {result}");
                 return Option.None<MediaSourceWrapper>();
             }
             else

@@ -13,7 +13,7 @@ namespace Primera.Webcam.Capture
 {
     public static class CameraCaptureFactory
     {
-        public static ITrace Trace { get; } = TracerST.Instance;
+        public static ITrace Trace => CameraCaptureTracing.Trace;
 
         public static Option<SourceReaderWrapper> GetDefaultSourceReader(CaptureDeviceWrapper device)
         {
@@ -37,6 +37,7 @@ namespace Primera.Webcam.Capture
 
             if (mediaType is null)
             {
+                Trace.Error($"Media type not found for resolution: {mediaTypeSelector.Resolution} and encoding: {mediaTypeSelector.Encoding}.");
                 return Option.None<MediaTypeWrapper>();
             }
             else

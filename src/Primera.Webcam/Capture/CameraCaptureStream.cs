@@ -21,8 +21,10 @@ namespace Primera.Webcam.Capture
 
     public class CameraCaptureStream : IDisposable
     {
-        private CameraCaptureStream(SourceReaderWrapper sourceReader)
+        private CameraCaptureStream(string deviceName, SourceReaderWrapper sourceReader)
         {
+            Trace.Info($"Initializing camera stream {deviceName}.");
+            DeviceName = deviceName;
             SourceReader = sourceReader;
 
             CancelToken = new CancellationTokenSource();
@@ -36,11 +38,15 @@ namespace Primera.Webcam.Capture
 
         public event EventHandler StreamClosed;
 
+        public string DeviceName { get; }
+
         public bool IsOpen { get; private set; }
 
         public Thread LoopThread { get; }
 
         public SourceReaderWrapper SourceReader { get; }
+
+        public ITrace Trace => CameraCaptureTracing.Trace;
 
         private CancellationTokenSource CancelToken { get; }
 
@@ -72,14 +78,13 @@ namespace Primera.Webcam.Capture
                             return maybeMedia.Map(media =>
                             {
                                 reader.SetMediaType(media);
-                                return new CameraCaptureStream(reader);
+                                return new CameraCaptureStream(deviceName, reader);
                             });
                         });
                     });
             }
 
             synchronizer.Send(openInner, default);
-            
 
             return closure;
         }
@@ -88,7 +93,7 @@ namespace Primera.Webcam.Capture
         {
             if (!IsOpen)
             {
-                throw new InvalidOperationException("This stream was closed. Please restart with OpenCamera()");
+                return Option.None<Bitmap>();
             }
 
             SamplesToSkip = skipSamples;
@@ -120,6 +125,7 @@ namespace Primera.Webcam.Capture
         /// <exception cref="NotImplementedException"></exception>
         public void Dispose()
         {
+            Trace.Info($"Disposing of camera stream {DeviceName}");
             CancelToken.Cancel();
             if (!LoopThread.Join(3000))
             {
@@ -142,7 +148,7 @@ namespace Primera.Webcam.Capture
                 }
                 catch (Exception e)
                 {
-                    TracerST.Instance.Error(ExceptionMessage.Handled(e, "Failed to read sample"));
+                    Trace.Error(ExceptionMessage.Handled(e, "Failed to read sample"));
                 }
 
                 IsOpen = maybeSample.Match(sample =>

@@ -22,7 +22,7 @@ namespace CameraCapture.WPF.VideoCapture
             IMFAttributes attributes = null;
             try
             {
-                Trace.Info($"Enumerating devices." + logDetail);
+                Trace.Verbose($"Enumerating devices." + logDetail);
                 Trace.Verbose("Creating attributes object.");
                 MFExtern.MFCreateAttributes(out attributes, 1).CheckResult();
 
@@ -34,12 +34,12 @@ namespace CameraCapture.WPF.VideoCapture
 
                 if (devices is null)
                 {
-                    Trace.Warning($"No devices returned from enumeration");
+                    Trace.Verbose($"No devices returned from enumeration");
                     return new List<IMFActivate>();
                 }
 
                 logDetail += $" [Count: {devices.Length}]";
-                Trace.Info("Devices enumerated." + logDetail);
+                Trace.Verbose("Devices enumerated." + logDetail);
                 return devices.ToList();
             }
             catch (HResultException e)
