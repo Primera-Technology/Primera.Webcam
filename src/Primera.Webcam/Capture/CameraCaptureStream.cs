@@ -7,6 +7,7 @@ using Optional;
 
 using Primera.Common.Logging;
 using Primera.Webcam.Device;
+using Primera.Webcam.Streaming;
 
 namespace Primera.Webcam.Capture
 {
@@ -14,7 +15,8 @@ namespace Primera.Webcam.Capture
     {
         DeviceNotFound,
         NoSourceReader,
-        MediaTypeNotFound
+        MediaTypeNotFound,
+        NotRun
     }
 
     public class CameraCaptureStream : IDisposable
@@ -50,22 +52,36 @@ namespace Primera.Webcam.Capture
 
         public static Option<CameraCaptureStream, CameraEnumerationErrors> OpenCamera(string deviceName, MediaTypeSelector mediaType)
         {
-            var maybeDevice = CameraCaptureFactory.SelectVidcapDevice(deviceName);
-            return maybeDevice.WithException(CameraEnumerationErrors.DeviceNotFound)
-                .FlatMap(device =>
-                {
-                    var maybeReader = CameraCaptureFactory.GetDefaultSourceReader(device).WithException(CameraEnumerationErrors.NoSourceReader);
-                    return maybeReader.FlatMap(reader =>
-                    {
-                        var maybeMedia = CameraCaptureFactory.SelectMediaType(reader, mediaType).WithException(CameraEnumerationErrors.MediaTypeNotFound);
+            // Because COM objects are sensitive to threading apartment, we need to open the camera in an MTA thread.
+            // The initiating thread may be disposed of after the camera is opened.
+            using MTAThreadSynchronizer synchronizer = new();
 
-                        return maybeMedia.Map(media =>
+            Option<CameraCaptureStream, CameraEnumerationErrors> closure = Option.None<CameraCaptureStream, CameraEnumerationErrors>(CameraEnumerationErrors.NotRun);
+
+            void openInner(object state)
+            {
+                var maybeDevice = CameraCaptureFactory.SelectVidcapDevice(deviceName);
+                closure = maybeDevice.WithException(CameraEnumerationErrors.DeviceNotFound)
+                    .FlatMap(device =>
+                    {
+                        var maybeReader = CameraCaptureFactory.GetDefaultSourceReader(device).WithException(CameraEnumerationErrors.NoSourceReader);
+                        return maybeReader.FlatMap(reader =>
                         {
-                            reader.SetMediaType(media);
-                            return new CameraCaptureStream(reader);
+                            var maybeMedia = CameraCaptureFactory.SelectMediaType(reader, mediaType).WithException(CameraEnumerationErrors.MediaTypeNotFound);
+
+                            return maybeMedia.Map(media =>
+                            {
+                                reader.SetMediaType(media);
+                                return new CameraCaptureStream(reader);
+                            });
                         });
                     });
-                });
+            }
+
+            synchronizer.Send(openInner, default);
+            
+
+            return closure;
         }
 
         public async Task<Option<Bitmap>> CaptureImageToBitmap(int skipSamples = 0)

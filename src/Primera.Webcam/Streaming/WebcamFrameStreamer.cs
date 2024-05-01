@@ -52,7 +52,7 @@ namespace Primera.Webcam.Streaming
         /// <summary>
         /// Most of our COM components need to be executed on the same thread to operate correctly.
         /// </summary>
-        public ThreadSynchronizer Synchronizer { get; }
+        public MTAThreadSynchronizer Synchronizer { get; }
 
         public ITrace Trace { get; }
 
