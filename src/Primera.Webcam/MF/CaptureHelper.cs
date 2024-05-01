@@ -6,6 +6,7 @@ using MediaFoundation;
 using MediaFoundation.Misc;
 
 using Primera.Common.Logging;
+using Primera.Webcam.Device;
 
 namespace CameraCapture.WPF.VideoCapture
 {
@@ -13,7 +14,7 @@ namespace CameraCapture.WPF.VideoCapture
     {
         public static object SampleLock = new();
 
-        public static ITrace Trace { get; } = TracerST.Instance;
+        public static ITrace Trace => CameraCaptureTracing.Trace;
 
         public static IList<IMFActivate> EnumerateMfDevices(Guid filterCategory)
         {

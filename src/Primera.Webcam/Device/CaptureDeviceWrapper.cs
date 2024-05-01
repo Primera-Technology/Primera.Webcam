@@ -13,6 +13,7 @@ using Primera.Common.Logging;
 
 namespace Primera.Webcam.Device
 {
+
     /// <summary>
     /// A Capture Device is a Media Foundation device that enumerates itself using a special GUID.
     /// The source object, accessible through <see cref="Instance"/>, is considered "unactivated" at first.
@@ -27,7 +28,7 @@ namespace Primera.Webcam.Device
             Instance = instance;
         }
 
-        public static ITrace Trace => TracerST.Instance;
+        public static ITrace Trace => CameraCaptureTracing.Trace;
 
         /// <summary>
         /// The Media Foundation COM object to be manipulated

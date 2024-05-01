@@ -6,7 +6,7 @@
     },
     "mediaTypes": {
       "commandName": "Project",
-      "commandLineArgs": "mediaTypes --deviceName \"Integrated Camera\" --json --outputFile \"C:\\ProgramData\\PTI\\tools\\mediaTypes.json\""
+      "commandLineArgs": "mediaTypes --deviceName \"TSTC USB20 WEB CAMERA\" --json"
     },
     "capture": {
       "commandName": "Project",

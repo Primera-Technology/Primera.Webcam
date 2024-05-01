@@ -49,7 +49,7 @@ namespace Primera.Webcam.Device
         /// </summary>
         public MediaTypeWrapper MediaType { get; }
 
-        public ITrace Trace { get; } = TracerST.Instance;
+        public ITrace Trace => CameraCaptureTracing.Trace;
 
         /// <summary>
         /// To prevent multiple readers of the sample buffer, lock access to it to maintain thread safety.

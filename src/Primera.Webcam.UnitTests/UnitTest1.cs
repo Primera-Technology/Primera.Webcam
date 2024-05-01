@@ -1,10 +1,73 @@
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 
 using Emgu.CV;
 
+using Optional.Async.Extensions;
+
+using Primera.Common.Logging;
+using Primera.Webcam.Capture;
+using Primera.Webcam.Device;
+
 namespace Primera.Webcam.UnitTests
 {
+    [TestClass]
+    public class CaptureStreamTests
+    {
+        [TestMethod]
+        public async Task CreateAndStreamInSTA()
+        {
+            var thread = new Thread(CreateAndReadStream)
+            {
+                IsBackground = true
+            };
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+
+            thread.Join();
+        }
+
+        private async void CreateAndReadStream()
+        {
+            CameraCaptureTracing.RegisterTrace(TracerST.Instance);
+            var traceSource = new TraceSource("testTracer")
+            {
+                Switch = { Level = SourceLevels.All },
+            };
+            traceSource.Listeners.Add(new ConsoleTraceListener());
+            var trace = TracerST.Instance;
+            trace.AssociateSource(traceSource);
+
+            var mediaType = new MediaTypeSelector()
+            {
+                Resolution = CameraResolution.StandardAspect(960),
+            };
+            var maybeStream = CameraCaptureStream.OpenCamera("TSTC USB20 WEB CAMERA", mediaType);
+
+            Thread.Sleep(5000);
+
+            var bmp = await maybeStream.WithoutException().FlatMapAsync(async some =>
+            {
+                try
+                {
+                    return await some.CaptureImageToBitmap(10);
+                }
+                finally
+                {
+                    some.Dispose();
+                }
+            });
+
+            bmp.Match(bmp =>
+            {
+            }, () =>
+            {
+                Assert.Fail("Failed to capture image");
+            });
+        }
+    }
+
     [TestClass]
     public class UnitTest1
     {

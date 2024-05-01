@@ -4,6 +4,8 @@ using MediaFoundation.ReadWrite;
 
 using Optional;
 
+using Primera.Common.Logging;
+
 namespace Primera.Webcam.Device
 {
     /// <summary>

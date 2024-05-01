@@ -19,7 +19,7 @@ namespace Primera.Webcam.Device
 
         public IMFAttributes Instance { get; }
 
-        public ITrace Trace => TracerST.Instance;
+        public ITrace Trace => CameraCaptureTracing.Trace;
 
         public static Option<SourceReaderOptionsWrapper> Create()
         {

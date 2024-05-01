@@ -39,7 +39,7 @@ namespace Primera.Webcam.Device
 
         public MediaTypeWrapper SelectedMediaType { get; private set; }
 
-        public ITrace Trace { get; } = TracerST.Instance;
+        public ITrace Trace => CameraCaptureTracing.Trace;
 
         private Lazy<List<MediaTypeWrapper>> LazyMediaTypes { get; }
 

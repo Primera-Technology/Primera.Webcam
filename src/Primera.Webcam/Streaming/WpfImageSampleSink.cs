@@ -17,9 +17,10 @@ namespace Primera.Webcam.Streaming
     /// </summary>
     public class WpfImageSampleSink : ISampleSink
     {
-        public WpfImageSampleSink(WPFImage writeTo)
+        public WpfImageSampleSink(WPFImage writeTo, ITrace trace)
         {
             WriteTo = writeTo;
+            Trace = trace;
         }
 
         /// <summary>
@@ -27,7 +28,7 @@ namespace Primera.Webcam.Streaming
         /// </summary>
         public WriteableBitmap BitmapTarget { get; private set; }
 
-        public ITrace Trace { get; } = TracerST.Instance;
+        public ITrace Trace { get; }
 
         /// <summary>
         /// The Image control that we should be writing to. The <see cref="WPFImage.Source"/> proeprty will be overriden during processing.

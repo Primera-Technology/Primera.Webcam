@@ -22,8 +22,9 @@ namespace Primera.Webcam.Streaming
     {
         private SourceReaderWrapper _readerObject;
 
-        public WebcamFrameStreamer()
+        public WebcamFrameStreamer(ITrace trace)
         {
+            Trace = trace;
             Synchronizer = new();
         }
 
@@ -48,28 +49,12 @@ namespace Primera.Webcam.Streaming
             }
         }
 
-        private void OnSampleAvailable(SampleWrapper sample)
-        {
-            SampleAvailable?.Invoke(this, sample);
-            if (!CancelToken.IsCancellationRequested)
-            {
-                Synchronizer.Post(_ =>
-                {
-                    ReadSample();
-                }, null);
-            }
-            else
-            {
-                Trace.Info("Cancellation requested. Device sample loop exiting.");
-            }
-        }
-
         /// <summary>
         /// Most of our COM components need to be executed on the same thread to operate correctly.
         /// </summary>
         public ThreadSynchronizer Synchronizer { get; }
 
-        public ITrace Trace { get; } = TracerST.Instance;
+        public ITrace Trace { get; }
 
         public void CloseDevice(bool fromRunningThread)
         {
@@ -98,19 +83,6 @@ namespace Primera.Webcam.Streaming
             {
                 Trace.Error(ExceptionMessage.Handled(e, "Could not read async sample."));
             }
-        }
-
-        private void ReadSample()
-        {
-            var maybeSample = ReaderObject.ReadSample();
-
-            maybeSample.MatchSome(sample =>
-            {
-                OnSampleAvailable(sample);
-                sample.Dispose();
-            });
-
-            Thread.Sleep(10);
         }
 
         public void SetDevice(CaptureDeviceWrapper videoDevice)
@@ -165,6 +137,35 @@ namespace Primera.Webcam.Streaming
             {
                 SetDevice(videoDevice);
             }, null);
+        }
+
+        private void OnSampleAvailable(SampleWrapper sample)
+        {
+            SampleAvailable?.Invoke(this, sample);
+            if (!CancelToken.IsCancellationRequested)
+            {
+                Synchronizer.Post(_ =>
+                {
+                    ReadSample();
+                }, null);
+            }
+            else
+            {
+                Trace.Info("Cancellation requested. Device sample loop exiting.");
+            }
+        }
+
+        private void ReadSample()
+        {
+            var maybeSample = ReaderObject.ReadSample();
+
+            maybeSample.MatchSome(sample =>
+            {
+                OnSampleAvailable(sample);
+                sample.Dispose();
+            });
+
+            Thread.Sleep(10);
         }
     }
 }
