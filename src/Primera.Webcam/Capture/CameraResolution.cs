@@ -1,4 +1,7 @@
-﻿namespace Primera.Webcam.Capture
+﻿using System;
+using System.Collections.Generic;
+
+namespace Primera.Webcam.Capture
 {
     public enum AspectRatios
     {
@@ -7,7 +10,7 @@
         Square,
     }
 
-    public class CameraResolution
+    public class CameraResolution : IEquatable<CameraResolution>
     {
         public CameraResolution(int pixelHeight, AspectRatios ratio)
         {
@@ -22,12 +25,39 @@
 
         public AspectRatios Ratio { get; }
 
+        public static bool operator !=(CameraResolution left, CameraResolution right)
+        {
+            return !(left == right);
+        }
+
+        public static bool operator ==(CameraResolution left, CameraResolution right)
+        {
+            return EqualityComparer<CameraResolution>.Default.Equals(left, right);
+        }
+
         /// <summary>
         /// Creates a camera resolution with given height at 4/3 aspect ratio
         /// </summary>
         public static CameraResolution StandardAspect(int height)
         {
             return new CameraResolution(height, AspectRatios.FourByThree);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as CameraResolution);
+        }
+
+        public bool Equals(CameraResolution other)
+        {
+            return other is not null &&
+                   PixelHeight == other.PixelHeight &&
+                   PixelWidth == other.PixelWidth;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(PixelHeight, PixelWidth);
         }
 
         public double SizeRatio(CameraResolution other)

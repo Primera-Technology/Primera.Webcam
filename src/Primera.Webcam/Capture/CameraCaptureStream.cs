@@ -167,6 +167,7 @@ namespace Primera.Webcam.Capture
                 }, () => false);
             }
 
+            IsOpen = false;
             StreamClosed?.Invoke(this, EventArgs.Empty);
         }
     }
