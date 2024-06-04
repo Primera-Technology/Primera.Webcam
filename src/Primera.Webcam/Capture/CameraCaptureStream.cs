@@ -38,6 +38,8 @@ namespace Primera.Webcam.Capture
 
         public event EventHandler StreamClosed;
 
+        public event EventHandler<SampleWrapper> FrameAvailable;
+
         public string DeviceName { get; }
 
         public bool IsOpen { get; private set; }
@@ -160,6 +162,14 @@ namespace Primera.Webcam.Capture
                             NextBitmap = bmp;
                             CaptureFlag = false;
                         });
+                    }
+                    try
+                    {
+                        FrameAvailable?.Invoke(this, sample);
+                    }
+                    catch (Exception e)
+                    {
+                        Trace.Error(ExceptionMessage.Handled(e, "Failed during FrameAvailable event"));
                     }
 
                     sample.Dispose();
