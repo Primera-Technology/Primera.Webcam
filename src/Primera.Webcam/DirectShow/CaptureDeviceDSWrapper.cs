@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
 
 using DirectShowLib;
@@ -12,13 +11,13 @@ namespace Primera.Webcam.DirectShow
         private int _exposureCurrent;
         private CameraControlFlags _exposureFlagCurrent;
 
-        public CaptureDeviceDSWrapper(IBaseFilter filter)
+        public CaptureDeviceDSWrapper(IBaseFilter filter, string friendlyName, string devicePath)
         {
             Filter = filter;
-            CameraControl = filter as IAMCameraControl;
+            FriendlyName = friendlyName;
+            DevicePath = devicePath;
 
-            Filter.QueryVendorInfo(out string name);
-            FriendlyName = name;
+            CameraControl = filter as IAMCameraControl;
 
             CameraControl.GetRange(CameraControlProperty.Exposure, out int min, out int max, out int step, out int def, out CameraControlFlags flags);
             ExposureMin = min;
@@ -33,6 +32,8 @@ namespace Primera.Webcam.DirectShow
         }
 
         public IAMCameraControl CameraControl { get; }
+
+        public string DevicePath { get; }
 
         public int ExposureCurrent
         {
@@ -63,25 +64,31 @@ namespace Primera.Webcam.DirectShow
         public IBaseFilter Filter { get; }
         public string FriendlyName { get; }
 
-        public static IEnumerable<IBaseFilter> CreateFilter(Guid filterCategory)
+        public static IEnumerable<CaptureDeviceDSWrapper> EnumerateVideoDevices()
         {
+            Guid filterCategory = FilterCategory.VideoInputDevice;
             ICreateDevEnum devEnum = (ICreateDevEnum)new CreateDevEnum();
             devEnum.CreateClassEnumerator(filterCategory, out IEnumMoniker enumMoniker, 0);
             IntPtr fetched = IntPtr.Zero;
-            IMoniker[] moniker = new IMoniker[1];
+            IMoniker[] monikers = new IMoniker[1];
 
             Guid filterInterface = typeof(IBaseFilter).GUID;
+            Guid propertyBagInterface = typeof(IPropertyBag).GUID;
 
-            while (enumMoniker.Next(1, moniker, fetched) == 0)
+            while (enumMoniker.Next(1, monikers, fetched) == 0)
             {
-                moniker[0].BindToObject(null, null, ref filterInterface, out object filter);
-                yield return (IBaseFilter)filter;
-            }
-        }
+                var moniker = monikers[0];
+                moniker.BindToStorage(null, null, ref propertyBagInterface, out object pBag);
+                IPropertyBag propertyBag = (IPropertyBag)pBag;
+                propertyBag.Read("FriendlyName", out object friendlyName, null);
+                propertyBag.Read("DevicePath", out object devicePath, null);
+                propertyBag.Read("Description", out object description, null);
 
-        public static IEnumerable<CaptureDeviceDSWrapper> GetAllDevices()
-        {
-            return CreateFilter(FilterCategory.VideoInputDevice).Select(f => new CaptureDeviceDSWrapper(f));
+                moniker.BindToObject(null, null, ref filterInterface, out object filter);
+
+                var wrapper = new CaptureDeviceDSWrapper((IBaseFilter)filter, (string)friendlyName, (string)devicePath);
+                yield return wrapper;
+            }
         }
     }
 }

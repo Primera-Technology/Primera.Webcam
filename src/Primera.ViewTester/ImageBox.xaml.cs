@@ -70,8 +70,8 @@ namespace Primera.ViewTester
             if (!maybeStream.HasValue) return;
             var stream = maybeStream.ValueOrFailure();
 
-            var filters = CaptureDeviceDSWrapper.GetAllDevices();
-            Filter = CaptureDeviceDSWrapper.GetAllDevices().FirstOrDefault();
+            var filters = CaptureDeviceDSWrapper.EnumerateVideoDevices();
+            Filter = filters.Where(f => f.FriendlyName == name).FirstOrDefault();
 
             Sink = new WpfImageSampleSink(image, new NullTracer());
             stream.FrameAvailable += Stream_FrameAvailable;
