@@ -4,8 +4,6 @@ using MediaFoundation.ReadWrite;
 
 using Optional;
 
-using Primera.Common.Logging;
-
 namespace Primera.Webcam.Device
 {
     /// <summary>
@@ -14,15 +12,18 @@ namespace Primera.Webcam.Device
     /// </summary>
     public class MediaSourceWrapper
     {
-        internal MediaSourceWrapper(IMFMediaSource instance)
+        internal MediaSourceWrapper(IMFMediaSource instance, CaptureDeviceWrapper parent)
         {
             Instance = instance;
+            Parent = parent;
         }
 
         /// <summary>
         /// The Media Foundation COM object to be manipulated
         /// </summary>
         public IMFMediaSource Instance { get; }
+
+        public CaptureDeviceWrapper Parent { get; }
 
         /// <summary>
         /// This media source can be consumed, but not until an object is created to actually read from it.
@@ -37,7 +38,7 @@ namespace Primera.Webcam.Device
                 return Option.None<SourceReaderWrapper>();
             }
 
-            return new SourceReaderWrapper(sourceReader).Some();
+            return new SourceReaderWrapper(sourceReader, this).Some();
         }
     }
 }

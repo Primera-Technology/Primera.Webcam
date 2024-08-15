@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Optional;
+using Optional.Unsafe;
 
 using Primera.Common.Logging;
 using Primera.Webcam.Device;
@@ -21,7 +22,7 @@ namespace Primera.Webcam.Capture
 
     public class CameraCaptureStream : IDisposable
     {
-        private CameraCaptureStream(string deviceName, SourceReaderWrapper sourceReader)
+        internal CameraCaptureStream(string deviceName, SourceReaderWrapper sourceReader)
         {
             Trace.Info($"Initializing camera stream {deviceName}.");
             DeviceName = deviceName;
@@ -36,9 +37,9 @@ namespace Primera.Webcam.Capture
             LoopThread.Start();
         }
 
-        public event EventHandler StreamClosed;
-
         public event EventHandler<SampleWrapper> FrameAvailable;
+
+        public event EventHandler StreamClosed;
 
         public string DeviceName { get; }
 
@@ -58,7 +59,7 @@ namespace Primera.Webcam.Capture
 
         private int SamplesToSkip { get; set; }
 
-        public static Option<CameraCaptureStream, CameraEnumerationErrors> OpenCamera(string deviceName, MediaTypeSelector mediaType)
+        public static Option<CameraCaptureStream, CameraEnumerationErrors> OpenCamera(string deviceName, MediaTypeSelector? mediaType)
         {
             // Because COM objects are sensitive to threading apartment, we need to open the camera in an MTA thread.
             // The initiating thread may be disposed of after the camera is opened.
@@ -69,21 +70,32 @@ namespace Primera.Webcam.Capture
             void openInner(object state)
             {
                 var maybeDevice = CameraCaptureFactory.SelectVidcapDevice(deviceName);
-                closure = maybeDevice.WithException(CameraEnumerationErrors.DeviceNotFound)
-                    .FlatMap(device =>
-                    {
-                        var maybeReader = CameraCaptureFactory.GetDefaultSourceReader(device).WithException(CameraEnumerationErrors.NoSourceReader);
-                        return maybeReader.FlatMap(reader =>
-                        {
-                            var maybeMedia = CameraCaptureFactory.SelectMediaType(reader, mediaType).WithException(CameraEnumerationErrors.MediaTypeNotFound);
+                if (!maybeDevice.HasValue)
+                {
+                    closure = Option.None<CameraCaptureStream, CameraEnumerationErrors>(CameraEnumerationErrors.DeviceNotFound);
+                    return;
+                }
+                var device = maybeDevice.ValueOrFailure();
 
-                            return maybeMedia.Map(media =>
-                            {
-                                reader.SetMediaType(media);
-                                return new CameraCaptureStream(deviceName, reader);
-                            });
-                        });
-                    });
+                var maybeReader = device.GetDefaultSourceReader();
+                if (!maybeReader.HasValue)
+                {
+                    closure = Option.None<CameraCaptureStream, CameraEnumerationErrors>(CameraEnumerationErrors.NoSourceReader);
+                    return;
+                }
+                var reader = maybeReader.ValueOrFailure();
+                var maybeMedia = mediaType is not null
+                    ? CameraCaptureFactory.SelectMediaType(reader, mediaType)
+                    : reader.MediaTypes[0].Some();
+                if (!maybeMedia.HasValue)
+                {
+                    closure = Option.None<CameraCaptureStream, CameraEnumerationErrors>(CameraEnumerationErrors.MediaTypeNotFound);
+                    return;
+                }
+                var media = maybeMedia.ValueOrFailure();
+                reader.SetMediaType(media);
+
+                closure = reader.OpenStream().Some<CameraCaptureStream, CameraEnumerationErrors>();
             }
 
             synchronizer.Send(openInner, default);

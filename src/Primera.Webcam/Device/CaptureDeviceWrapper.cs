@@ -8,12 +8,12 @@ using MediaFoundation;
 using MediaFoundation.Misc;
 
 using Optional;
+using Optional.Unsafe;
 
 using Primera.Common.Logging;
 
 namespace Primera.Webcam.Device
 {
-
     /// <summary>
     /// A Capture Device is a Media Foundation device that enumerates itself using a special GUID.
     /// The source object, accessible through <see cref="Instance"/>, is considered "unactivated" at first.
@@ -66,13 +66,40 @@ namespace Primera.Webcam.Device
             }
             else
             {
-                return new MediaSourceWrapper(mediaSource).Some();
+                return new MediaSourceWrapper(mediaSource, this).Some();
             }
         }
 
         public void Dispose()
         {
             COMBase.SafeRelease(Instance);
+        }
+
+        public Option<SourceReaderWrapper> GetDefaultSourceReader()
+        {
+            var maybeOptions = SourceReaderOptionsWrapper.Create();
+            if (!maybeOptions.HasValue)
+            {
+                return Option.None<SourceReaderWrapper>();
+            }
+            var options = maybeOptions.ValueOrFailure();
+
+            options.DisableReadWriteConverters(true);
+
+            var maybeMediaSource = Activate();
+            if (!maybeMediaSource.HasValue)
+            {
+                return Option.None<SourceReaderWrapper>();
+            }
+            var mediaSource = maybeMediaSource.ValueOrFailure();
+
+            var maybeReader = mediaSource.CreateSourceReader(options);
+            if (!maybeReader.HasValue)
+            {
+                return Option.None<SourceReaderWrapper>();
+            }
+
+            return maybeReader.ValueOrFailure().Some();
         }
 
         /// <summary>

@@ -15,15 +15,6 @@ namespace Primera.Webcam.Capture
     {
         public static ITrace Trace => CameraCaptureTracing.Trace;
 
-        public static Option<SourceReaderWrapper> GetDefaultSourceReader(CaptureDeviceWrapper device)
-        {
-            return SourceReaderOptionsWrapper.Create()
-               .FlatMap(options =>
-               {
-                   options.DisableReadWriteConverters(true);
-                   return device.Activate().FlatMap(mediaSource => mediaSource.CreateSourceReader(options));
-               });
-        }
 
         public static Option<MediaTypeWrapper> SelectMediaType(SourceReaderWrapper device, MediaTypeSelector mediaTypeSelector)
         {

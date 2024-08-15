@@ -9,8 +9,10 @@ using MediaFoundation.Misc;
 using MediaFoundation.ReadWrite;
 
 using Optional;
+using Optional.Unsafe;
 
 using Primera.Common.Logging;
+using Primera.Webcam.Capture;
 
 namespace Primera.Webcam.Device
 {
@@ -20,9 +22,11 @@ namespace Primera.Webcam.Device
     /// </summary>
     public class SourceReaderWrapper : IDisposable
     {
-        internal SourceReaderWrapper(IMFSourceReader instance)
+        internal SourceReaderWrapper(IMFSourceReader instance, MediaSourceWrapper parent)
         {
             Instance = instance;
+            Parent = parent;
+
             LazyMediaTypes = new(GetMediaTypes);
         }
 
@@ -37,6 +41,8 @@ namespace Primera.Webcam.Device
 
         public int NextFrameNumber { get; private set; }
 
+        public MediaSourceWrapper Parent { get; }
+
         public MediaTypeWrapper SelectedMediaType { get; private set; }
 
         public ITrace Trace => CameraCaptureTracing.Trace;
@@ -46,6 +52,11 @@ namespace Primera.Webcam.Device
         public void Dispose()
         {
             COMBase.SafeRelease(Instance);
+        }
+
+        public CameraCaptureStream OpenStream()
+        {
+            return new CameraCaptureStream(Parent.Parent.GetFriendlyName().ValueOrFailure(), this);
         }
 
         public List<MediaTypeWrapper> GetMediaTypes()

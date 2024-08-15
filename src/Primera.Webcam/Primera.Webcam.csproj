@@ -24,6 +24,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="DirectShowLib.Standard" Version="2.1.0" />
         <PackageReference Include="Emgu.CV" Version="4.7.0.5276" />
         <PackageReference Include="Emgu.CV.runtime.windows" Version="4.7.0.5276" />
         <PackageReference Include="MediaFoundation" Version="3.1.0" />
