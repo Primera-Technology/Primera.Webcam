@@ -67,13 +67,6 @@ namespace Primera.Webcam.CLI
             rootCommand.AddGlobalOption(outputFileOption);
 
             /*
-             * Test exposure
-             */
-            var testExposureCommand = new Command("testExposure", "Test exposure settings for a random capture device and media type");
-            testExposureCommand.SetHandler(TestExposure);
-            rootCommand.AddCommand(testExposureCommand);
-
-            /*
              * List Video Capture Devices
              */
             var listDevicesCommand = new Command("devices",
@@ -144,21 +137,6 @@ namespace Primera.Webcam.CLI
             };
 
             outputStream.Write(OutputText);
-        }
-
-        public static void TestExposure()
-        {
-            var filters = DirectShowHelper.CreateFilter(FilterCategory.VideoInputDevice);
-
-            foreach (var f in filters)
-            {
-                var camCap = f as IAMCameraControl;
-                if (camCap is not null)
-                {
-                    camCap.GetRange(CameraControlProperty.Exposure, out int min, out int max, out int step, out int def, out CameraControlFlags flags);
-
-                }
-            }
         }
 
         private static void CaptureImage(string deviceName, string mediaTypeId, string filepath)
