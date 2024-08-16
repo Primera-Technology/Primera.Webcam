@@ -29,6 +29,13 @@ namespace Primera.Webcam.Streaming
             CancelToken.Cancel();
         }
 
+        public T ExecuteOnThread<T>(Func<T> action)
+        {
+            T result = default;
+            Send(_ => result = action(), null);
+            return result;
+        }
+
         public override void Post(SendOrPostCallback d, object state)
         {
             Action action = () => d(state);

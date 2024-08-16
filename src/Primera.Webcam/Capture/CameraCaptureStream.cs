@@ -8,7 +8,6 @@ using Optional.Unsafe;
 
 using Primera.Common.Logging;
 using Primera.Webcam.Device;
-using Primera.Webcam.Streaming;
 
 namespace Primera.Webcam.Capture
 {
@@ -61,46 +60,30 @@ namespace Primera.Webcam.Capture
 
         public static Option<CameraCaptureStream, CameraEnumerationErrors> OpenCamera(string deviceName, MediaTypeSelector? mediaType)
         {
-            // Because COM objects are sensitive to threading apartment, we need to open the camera in an MTA thread.
-            // The initiating thread may be disposed of after the camera is opened.
-            using MTAThreadSynchronizer synchronizer = new();
-
-            Option<CameraCaptureStream, CameraEnumerationErrors> closure = Option.None<CameraCaptureStream, CameraEnumerationErrors>(CameraEnumerationErrors.NotRun);
-
-            void openInner(object state)
+            var maybeDevice = CameraCaptureFactory.SelectVidcapDevice(deviceName);
+            if (!maybeDevice.HasValue)
             {
-                var maybeDevice = CameraCaptureFactory.SelectVidcapDevice(deviceName);
-                if (!maybeDevice.HasValue)
-                {
-                    closure = Option.None<CameraCaptureStream, CameraEnumerationErrors>(CameraEnumerationErrors.DeviceNotFound);
-                    return;
-                }
-                var device = maybeDevice.ValueOrFailure();
-
-                var maybeReader = device.GetDefaultSourceReader();
-                if (!maybeReader.HasValue)
-                {
-                    closure = Option.None<CameraCaptureStream, CameraEnumerationErrors>(CameraEnumerationErrors.NoSourceReader);
-                    return;
-                }
-                var reader = maybeReader.ValueOrFailure();
-                var maybeMedia = mediaType is not null
-                    ? CameraCaptureFactory.SelectMediaType(reader, mediaType)
-                    : reader.MediaTypes[0].Some();
-                if (!maybeMedia.HasValue)
-                {
-                    closure = Option.None<CameraCaptureStream, CameraEnumerationErrors>(CameraEnumerationErrors.MediaTypeNotFound);
-                    return;
-                }
-                var media = maybeMedia.ValueOrFailure();
-                reader.SetMediaType(media);
-
-                closure = reader.OpenStream().Some<CameraCaptureStream, CameraEnumerationErrors>();
+                return Option.None<CameraCaptureStream, CameraEnumerationErrors>(CameraEnumerationErrors.DeviceNotFound);
             }
+            var device = maybeDevice.ValueOrFailure();
 
-            synchronizer.Send(openInner, default);
+            var maybeReader = device.GetDefaultSourceReader();
+            if (!maybeReader.HasValue)
+            {
+                return Option.None<CameraCaptureStream, CameraEnumerationErrors>(CameraEnumerationErrors.NoSourceReader);
+            }
+            var reader = maybeReader.ValueOrFailure();
+            var maybeMedia = mediaType is not null
+                ? CameraCaptureFactory.SelectMediaType(reader, mediaType)
+                : reader.MediaTypes[0].Some();
+            if (!maybeMedia.HasValue)
+            {
+                return Option.None<CameraCaptureStream, CameraEnumerationErrors>(CameraEnumerationErrors.MediaTypeNotFound);
+            }
+            var media = maybeMedia.ValueOrFailure();
+            reader.SetMediaType(media);
 
-            return closure;
+            return reader.OpenStream().Some<CameraCaptureStream, CameraEnumerationErrors>();
         }
 
         public async Task<Option<Bitmap>> CaptureImageToBitmap(int skipSamples = 0)

@@ -58,10 +58,15 @@ namespace Primera.Webcam.DirectShow
         }
 
         public CameraControlFlags ExposureFlagSelection { get; }
+
         public int ExposureMax { get; }
+
         public int ExposureMin { get; }
+
         public int ExposureStep { get; }
+
         public IBaseFilter Filter { get; }
+
         public string FriendlyName { get; }
 
         public static IEnumerable<CaptureDeviceDSWrapper> EnumerateVideoDevices()
@@ -89,6 +94,30 @@ namespace Primera.Webcam.DirectShow
                 var wrapper = new CaptureDeviceDSWrapper((IBaseFilter)filter, (string)friendlyName, (string)devicePath);
                 yield return wrapper;
             }
+        }
+
+        public bool SetAndCheckExposure(int exposure, CameraControlFlags flags)
+        {
+            CameraControl.Set(CameraControlProperty.Exposure, exposure, flags);
+            _exposureCurrent = exposure;
+            _exposureFlagCurrent = flags;
+
+            CameraControl.Get(CameraControlProperty.Exposure, out int exposureCheck, out CameraControlFlags exposureFlagsCheck);
+            return exposureCheck == exposure && exposureFlagsCheck == flags;
+        }
+
+        public void SetExposure(int exposure, CameraControlFlags flags)
+        {
+            CameraControl.Set(CameraControlProperty.Exposure, exposure, flags);
+            _exposureCurrent = exposure;
+            _exposureFlagCurrent = flags;
+        }
+
+        public void UpdateExposure()
+        {
+            CameraControl.Get(CameraControlProperty.Exposure, out int exposure, out CameraControlFlags exposureFlags);
+            _exposureCurrent = exposure;
+            _exposureFlagCurrent = exposureFlags;
         }
     }
 }
