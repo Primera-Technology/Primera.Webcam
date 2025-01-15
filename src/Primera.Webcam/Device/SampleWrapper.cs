@@ -98,11 +98,13 @@ namespace Primera.Webcam.Device
                     try
                     {
                         UnmanagedImageConvert.ColorToBGRA(MediaType.VideoSubtype, destinationLocation, scanlineBuffer, pixelWidth, pixelHeight);
+                        Trace.Verbose("Sample converted to BGRA and written to destination location");
                         return true;
                     }
                     finally
                     {
                         frameBuffer2d.Unlock2D();
+                        Trace.Verbose("Sample Frame buffer unlocked");
                     }
                 }
                 catch (Exception e)

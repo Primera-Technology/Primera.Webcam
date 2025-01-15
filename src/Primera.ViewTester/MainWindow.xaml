@@ -9,7 +9,7 @@
     Height="450"
     mc:Ignorable="d">
     <Grid>
-        <local:ImageBox />
+        <local:ImageBox x:Name="imageBox" />
 
     </Grid>
 </Window>

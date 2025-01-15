@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Diagnostics;
+using System.Windows;
 using System.Windows.Controls;
 
 using DirectShowLib;
@@ -96,7 +97,9 @@ namespace Primera.ViewTester
 
             Filter = syncFilter.ValueOrFailure();
 
-            Sink = new WpfImageSampleSink(image, new NullTracer());
+            Sink = new WpfImageSampleSink(image, TracerST.Instance);
+            Sink.RegisterMainWindowEvents();
+
             stream.Obj.FrameAvailable += Stream_FrameAvailable;
         }
 
